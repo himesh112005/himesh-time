@@ -1,0 +1,256 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="description" content="Personal Daily Routine, Habits & Task Planner for Himesh Bhai - 100% Offline PWA">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Himesh Time">
+  
+  <title>Himesh Time - Daily Routine & Task Planner</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <!-- Confetti Canvas for 100% Day Completion -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="greeting-container">
+          <h1 class="greeting-text" id="header-greeting">
+            Jai Swaminarayan, <span class="greeting-accent">Himesh Bhai</span> 🙏
+          </h1>
+          <div class="date-text" id="header-date">Today</div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="btn-open-settings" aria-label="Settings" title="Settings">
+            ⚙️
+          </button>
+        </div>
+      </div>
+
+      <!-- Date Quick Navigator -->
+      <div class="date-nav-bar">
+        <button class="date-nav-btn" id="btn-prev-day" title="Previous Day">◀</button>
+        <div class="date-display-current" id="nav-date-display" title="Click to jump to Today">
+          Loading...
+        </div>
+        <span class="today-badge" id="today-badge">Today</span>
+        <button class="date-nav-btn" id="btn-next-day" title="Next Day">▶</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- 1. Hero Daily Goal Card (With Time/Deadline Option) -->
+      <section class="goal-hero-card" id="goal-hero-card" aria-label="Daily Goal">
+        <!-- Rendered dynamically by js/ui.js -->
+      </section>
+
+      <!-- 2. Progress Overview Ring & Bar -->
+      <section class="progress-card" aria-label="Routine Progress">
+        <div class="progress-ring-container">
+          <svg class="progress-ring-svg">
+            <circle class="progress-ring-circle-bg" cx="32" cy="32" r="26"></circle>
+            <circle class="progress-ring-circle" id="progress-ring-circle" cx="32" cy="32" r="26"></circle>
+          </svg>
+          <div class="progress-ring-text" id="progress-ring-text">0%</div>
+        </div>
+        <div class="progress-info">
+          <div class="progress-title-row">
+            <span class="progress-title">Daily Habits Completed</span>
+            <span class="progress-fraction" id="progress-fraction">0/0 Done</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+          <div class="progress-quote" id="progress-quote">✨ Start your daily routine with focus.</div>
+        </div>
+      </section>
+
+      <!-- 3. Category Filter Chips -->
+      <section class="filter-scroll-container" id="filter-chips-container">
+        <!-- Rendered dynamically -->
+      </section>
+
+      <!-- 4. Category-Grouped Routine & Task Checklist (Pure Checklist, No Time) -->
+      <section class="tasks-container" id="tasks-container">
+        <!-- Rendered dynamically -->
+      </section>
+    </main>
+
+    <!-- Floating Action Button for Quick Task Addition -->
+    <button class="fab-btn" id="fab-add-task" aria-label="Add Task" title="Add Task">
+      +
+    </button>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="today">
+        <span class="nav-icon">📅</span>
+        <span>Today</span>
+      </button>
+      <button class="nav-item" data-tab="templates">
+        <span class="nav-icon">➕</span>
+        <span>New Task</span>
+      </button>
+      <button class="nav-item" data-tab="settings">
+        <span class="nav-icon">⚙️</span>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL: Add New Task (Recurring vs Temporary) -->
+  <div class="modal-overlay" id="modal-add-task">
+    <div class="modal-sheet">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">➕ Add New Task</h2>
+        <button class="modal-close-btn" data-modal="modal-add-task">&times;</button>
+      </div>
+
+      <form id="form-add-task">
+        <div class="form-group">
+          <label class="form-label" for="input-task-title">Task Title</label>
+          <input type="text" id="input-task-title" class="form-input" placeholder="e.g. Solve 5 GATE problems, Read 10 pages..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="select-task-category">Category</label>
+          <select id="select-task-category" class="form-select">
+            <option value="Spiritual">🙏 Spiritual & Routine</option>
+            <option value="Study">📚 Learning & Skill</option>
+            <option value="Career">💼 Career & Projects</option>
+            <option value="Personal" selected>🌟 Personal</option>
+            <option value="Temporary">🏷️ Temporary / Ad-Hoc</option>
+          </select>
+        </div>
+
+        <div class="form-toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">Repeat Daily (Recurring Habit)</span>
+            <span class="toggle-desc">Auto-adds to your checklist every single day</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-task-recurring">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          <span>✓ Add Task</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Set / Edit Daily Goal (With Time Option) -->
+  <div class="modal-overlay" id="modal-goal">
+    <div class="modal-sheet">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">🎯 Set Today's Key Goal</h2>
+        <button class="modal-close-btn" data-modal="modal-goal">&times;</button>
+      </div>
+
+      <form id="form-goal">
+        <div class="form-group">
+          <label class="form-label" for="input-goal-text">What is your #1 Goal for Today?</label>
+          <textarea id="input-goal-text" class="form-textarea" rows="3" placeholder="e.g. Finish GATE Chapter 4 revision and attend internship sprint sync..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-goal-time">Target Time / Deadline (Optional)</label>
+          <input type="time" id="input-goal-time" class="form-input">
+        </div>
+
+        <button type="submit" class="btn-primary">
+          <span>💾 Save Goal</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Settings & App Preferences -->
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-sheet">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">⚙️ Settings</h2>
+        <button class="modal-close-btn" data-modal="modal-settings">&times;</button>
+      </div>
+
+      <form id="form-settings">
+        <div class="settings-section">
+          <!-- Profile Customization -->
+          <div class="settings-card">
+            <div class="settings-card-title">👤 Profile</div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="input-user-name">Your Name</label>
+              <input type="text" id="input-user-name" class="form-input" value="Himesh" required>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="settings-card">
+            <div class="settings-card-title">🎨 Appearance</div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="select-theme">App Theme</label>
+              <select id="select-theme" class="form-select">
+                <option value="dark">🌙 Dark Glassmorphism (Default)</option>
+                <option value="light">☀️ Clean Light Mode</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">
+            <span>💾 Save Preferences</span>
+          </button>
+
+          <!-- Data & Routines Management -->
+          <div class="settings-card">
+            <div class="settings-card-title">🔄 Habit Templates & Backup</div>
+            
+            <button type="button" class="btn-secondary" id="btn-reset-templates">
+              <span>🔄 Reset 12 Default Routines</span>
+            </button>
+
+            <button type="button" class="btn-secondary" id="btn-export-data">
+              <span>📥 Export & Backup Data (JSON)</span>
+            </button>
+
+            <button type="button" class="btn-danger" id="btn-clear-all">
+              <span>🗑️ Wipe All Data</span>
+            </button>
+          </div>
+
+          <!-- App Info -->
+          <div class="settings-card" style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+            <div><strong>Himesh Time</strong> v1.0 • 100% Offline PWA</div>
+            <div>Built with dedication for Himesh Bhai 🙏</div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Core JavaScript Modules -->
+  <script src="./js/db.js"></script>
+  <script src="./js/tasks.js"></script>
+  <script src="./js/goals.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
