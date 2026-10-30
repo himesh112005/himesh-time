@@ -1,4 +1,4 @@
-﻿/**
+/**
  * IndexedDB Database Module for Himesh Time
  * Provides offline-first persistent storage for Tasks, Daily Goals, Templates & Settings.
  */
@@ -171,6 +171,27 @@ class AppDB {
       const request = store.delete(templateId);
       request.onsuccess = () => resolve(true);
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  async deleteTasksByTemplateId(templateId, fromDateStr = null) {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('tasks', 'readwrite');
+      const store = tx.objectStore('tasks');
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const allTasks = request.result || [];
+        allTasks.forEach(t => {
+          if (t.templateId === templateId) {
+            if (!fromDateStr || t.targetDate >= fromDateStr) {
+              store.delete(t.id);
+            }
+          }
+        });
+      };
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
     });
   }
 
